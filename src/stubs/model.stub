@@ -1,0 +1,15 @@
+<?php namespace {{namespace}};
+
+use Illuminate\Database\Eloquent\Model;
+
+class {{class}} extends {{extends}} {
+
+    {{timestamps}}
+
+    {{table}}
+
+    {{fillable}}
+    
+    {{guarded}}
+
+}
