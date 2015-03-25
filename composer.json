@@ -1,5 +1,5 @@
 {
-  "name": "ignasbernotas/schema-model-generator",
+  "name": "ignasbernotas/laravel-model-generator",
   "description": "Laravel 5 model generator from existing schema",
   "keywords": ["laravel", "model", "schema", "generator"],
   "license": "MIT",

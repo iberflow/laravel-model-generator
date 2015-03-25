@@ -9,7 +9,7 @@ class {{class}} extends {{extends}} {
     {{table}}
 
     {{fillable}}
-    
+
     {{guarded}}
 
 }
