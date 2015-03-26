@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="description" content="Laravel-model-generator : Laravel 5 model generator for an existing schema">
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Laravel-model-generator</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/ignasbernotas/laravel-model-generator">View on GitHub</a>
+
+          <h1 id="project_title">Laravel-model-generator</h1>
+          <h2 id="project_tagline">Laravel 5 model generator for an existing schema</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/ignasbernotas/laravel-model-generator/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/ignasbernotas/laravel-model-generator/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h1>
+<a id="model-generator" class="anchor" href="#model-generator" aria-hidden="true"><span class="octicon octicon-link"></span></a>Model generator</h1>
+
+<p>Laravel 5 model generator for an existing schema. 
+It plugs into your existing database and generates model class files based on the existing tables.</p>
+
+<hr>
+
+<h1>
+<a id="installation" class="anchor" href="#installation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Installation</h1>
+
+<p>Add <code>"ignasbernotas/laravel-model-generator": "dev-master"</code> to your composer.json file.</p>
+
+<p>Add <code>Iber\Generator\ModelGeneratorProvider</code> to your <code>config/app.php</code> providers array</p>
+
+<hr>
+
+<h1>
+<a id="help--options" class="anchor" href="#help--options" aria-hidden="true"><span class="octicon octicon-link"></span></a>Help &amp; Options</h1>
+
+<p><code>php artisan help make:models</code></p>
+
+<p>Options:</p>
+
+<ul>
+<li>
+<code>--dir=""</code>                 Model directory (default: "Models/")</li>
+<li>
+<code>--extends=""</code>             Parent class (default: "Model")</li>
+<li>
+<code>--fillable=""</code>            Rules for $fillable array columns (default: "")</li>
+<li>
+<code>--guarded=""</code>             Rules for $guarded array columns (default: "ends:_id|ids,equals:id")</li>
+<li>
+<code>--timestamps=""</code>          Rules for $timestamps columns (default: "ends:_at")</li>
+</ul>
+
+<hr>
+
+<h1>
+<a id="running-the-generator" class="anchor" href="#running-the-generator" aria-hidden="true"><span class="octicon octicon-link"></span></a>Running the generator</h1>
+
+<p><code>php artisan make:models</code></p>
+
+<hr>
+
+<h1>
+<a id="examples" class="anchor" href="#examples" aria-hidden="true"><span class="octicon octicon-link"></span></a>Examples</h1>
+
+<h2>
+<a id="table-users" class="anchor" href="#table-users" aria-hidden="true"><span class="octicon octicon-link"></span></a>Table users</h2>
+
+<h3>
+<a id="sql" class="anchor" href="#sql" aria-hidden="true"><span class="octicon octicon-link"></span></a>SQL</h3>
+
+<pre><code>CREATE TABLE `users` (
+    `id` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    `username` VARCHAR(64) NULL DEFAULT NULL,
+    `password` VARCHAR(45) NULL DEFAULT NULL,
+    `email` VARCHAR(45) NULL DEFAULT NULL,
+    `name` VARCHAR(45) NULL DEFAULT NULL,
+    PRIMARY KEY (`id`)
+)
+COLLATE='utf8_general_ci'
+ENGINE=InnoDB;
+</code></pre>
+
+<h3>
+<a id="generated-modelsusersphp-class" class="anchor" href="#generated-modelsusersphp-class" aria-hidden="true"><span class="octicon octicon-link"></span></a>Generated Models/Users.php class</h3>
+
+<pre><code>&lt;?php namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Users extends Model {
+
+    public $timestamps = false;
+
+    protected $table = 'users';
+
+    protected $fillable = ['username', 'email', 'name'];
+
+    protected $guarded = ['id', 'password'];
+
+}
+</code></pre>
+
+<h2>
+<a id="table-posts" class="anchor" href="#table-posts" aria-hidden="true"><span class="octicon octicon-link"></span></a>Table posts</h2>
+
+<h3>
+<a id="sql-1" class="anchor" href="#sql-1" aria-hidden="true"><span class="octicon octicon-link"></span></a>SQL</h3>
+
+<pre><code>CREATE TABLE `posts` (
+    `id` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    `title` VARCHAR(64) UNSIGNED NOT NULL DEFAULT '',
+    `content` TEXT NOT NULL DEFAULT '',
+    `created_at` TIMESTAMP NOT NULL DEFAULT '0000-00-00 00:00:00',
+    `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`)
+)
+COLLATE='utf8_general_ci'
+ENGINE=InnoDB;
+</code></pre>
+
+<h3>
+<a id="generated-modelspostsphp-class" class="anchor" href="#generated-modelspostsphp-class" aria-hidden="true"><span class="octicon octicon-link"></span></a>Generated Models/Posts.php class</h3>
+
+<pre><code>&lt;?php namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Posts extends Model {
+
+    public $timestamps = true;
+
+    protected $table = 'posts';
+
+    protected $fillable = ['title', 'content', 'created_at', 'updated_at'];
+
+    protected $guarded = ['id'];
+
+}
+</code></pre>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Laravel-model-generator maintained by <a href="https://github.com/ignasbernotas">ignasbernotas</a></p>
+        <p>Published with <a href="https://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
