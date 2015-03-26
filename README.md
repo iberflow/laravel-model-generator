@@ -1,5 +1,7 @@
 # Model generator
-Laravel 5 model generator for an existing schema. It plugs into your existing database and generate models based on the existing tables.
+Laravel 5 model generator for an existing schema. 
+
+It plugs into your existing database and generates model class files based on the existing tables.
 
 # Installation
 Add ```"ignasbernotas/laravel-model-generator": "dev-master"``` to your composer.json file.
