@@ -132,7 +132,7 @@ class MakeModelsCommand extends GeneratorCommand
 
         $class = str_replace('{{extends}}', $this->option('extends'), $class);
 
-        $class = str_replace('{{table}}', 'protected $table = \'' . $table . '\';', $class);
+        $class = str_replace('{{table}}', 'protected $table = \'' . rtrim($table, 's') . '\';', $class);
 
         $class = str_replace('{{fillable}}', 'protected $fillable = ' . VariableConversion::convertArrayToString($properties['fillable']) . ';', $class);
         $class = str_replace('{{guarded}}', 'protected $guarded = ' . VariableConversion::convertArrayToString($properties['guarded']) . ';', $class);
@@ -160,10 +160,10 @@ class MakeModelsCommand extends GeneratorCommand
         foreach ($columns as $column) {
 
             //priotitze guarded properties and move to fillable
-            if ($this->ruleProcessor->check($this->option('guarded'), $column->name)) {
-                $guarded[] = $column->name;
-            } elseif ($this->ruleProcessor->check($this->option('fillable'), $column->name)) {
-                $fillable[] = $column->name;
+            if ($this->ruleProcessor->check($this->option('fillable'), $column->name)) {
+                if(!in_array($column->name, ['id', 'created_at', 'updated_at', 'deleted_at'])) {
+                    $fillable[] = $column->name;
+                }
             }
 
             //check if this model is timestampable

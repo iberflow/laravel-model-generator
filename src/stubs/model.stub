@@ -6,10 +6,6 @@ class {{class}} extends {{extends}} {
 
     {{timestamps}}
 
-    {{table}}
-
     {{fillable}}
-
-    {{guarded}}
 
 }
