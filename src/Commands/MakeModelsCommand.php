@@ -47,7 +47,7 @@ class MakeModelsCommand extends GeneratorCommand
      *
      * @var array
      */
-    protected $guardedRules = 'ends:_id|ids,equals:id'; //['ends' => ['_id', 'ids'], 'equals' => ['id']];
+    protected $guardedRules = 'ends:_guarded'; //['ends' => ['_id', 'ids'], 'equals' => ['id']];
 
     /**
      * Rules for columns that go into the fillable list.
@@ -103,7 +103,7 @@ class MakeModelsCommand extends GeneratorCommand
 
         $class = VariableConversion::convertTableNameToClassName($table);
 
-        $name = $this->parseName($prefix . $class);
+        $name = rtrim($this->parseName($prefix . $class), 's');
 
         if ($this->files->exists($path = $this->getPath($name))) {
             return $this->error($this->extends . ' for '.$table.' already exists!');
@@ -131,12 +131,8 @@ class MakeModelsCommand extends GeneratorCommand
         $properties = $this->getTableProperties($table);
 
         $class = str_replace('{{extends}}', $this->option('extends'), $class);
-
-        $class = str_replace('{{table}}', 'protected $table = \'' . rtrim($table, 's') . '\';', $class);
-
         $class = str_replace('{{fillable}}', 'protected $fillable = ' . VariableConversion::convertArrayToString($properties['fillable']) . ';', $class);
         $class = str_replace('{{guarded}}', 'protected $guarded = ' . VariableConversion::convertArrayToString($properties['guarded']) . ';', $class);
-
         $class = str_replace('{{timestamps}}', 'public $timestamps = ' . VariableConversion::convertBooleanToString($properties['timestamps']) . ';', $class);
 
         return $class;
@@ -165,7 +161,9 @@ class MakeModelsCommand extends GeneratorCommand
                     $fillable[] = $column->name;
                 }
             }
-
+            if ($this->ruleProcessor->check($this->option('guarded'), $column->name)) {
+                $fillable[] = $column->name;
+            }
             //check if this model is timestampable
             if ($this->ruleProcessor->check($this->option('timestamps'), $column->name)) {
                 $timestamps = true;
