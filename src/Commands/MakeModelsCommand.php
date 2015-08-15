@@ -294,7 +294,7 @@ class MakeModelsCommand extends GeneratorCommand
             ['timestamps', null, InputOption::VALUE_OPTIONAL, 'Rules for $timestamps columns', $this->timestampRules],
             ['ignore', "i", InputOption::VALUE_OPTIONAL, 'Ignores the tables you define, separated with ,', null],
             ['ignoresystem', "s", InputOption::VALUE_NONE, 'If you want to ignore system tables.
-            Just type --ignoresystem or -s', null],
+            Just type --ignoresystem or -s'],
             ['getset', 'm', InputOption::VALUE_NONE, 'Defines if you want to generate set and get methods']
         ];
     }
