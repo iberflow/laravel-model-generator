@@ -295,7 +295,7 @@ class MakeModelsCommand extends GeneratorCommand
             ['ignore', "i", InputOption::VALUE_OPTIONAL, 'Ignores the tables you define, separated with ,', null],
             ['ignoresystem', "s", InputOption::VALUE_NONE, 'If you want to ignore system tables.
             Just type --ignoresystem or -s', null],
-            ['getset', 'm', InputOption::VALUE_NONE, 'Defines if you want to generate set and get methods', false]
+            ['getset', 'm', InputOption::VALUE_NONE, 'Defines if you want to generate set and get methods']
         ];
     }
 }
