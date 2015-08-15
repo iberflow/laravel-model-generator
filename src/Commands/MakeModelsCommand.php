@@ -121,6 +121,24 @@ class MakeModelsCommand extends GeneratorCommand
         //prefix is the sub-directory within app
         $prefix = $this->option('dir');
 
+        $ignoreTable = $this->option("ignore");
+
+        if ($this->option("ignoresystem")) {
+            $ignoreSystem = "users,permissions,permission_role,roles,role_user,users,migrations,password_resets";
+
+            if (is_string($ignoreTable)) {
+                $ignoreTable.=",".$ignoreSystem;
+            } else {
+                $ignoreTable = $ignoreSystem;
+            }
+        }
+
+        // if we have ignore tables, we need to find all the posibilites
+        if (is_string($ignoreTable) && preg_match("/^".$table."|^".$table.",|,".$table.",|,".$table."$/", $ignoreTable)) {
+            $this->info($table." is ignored");
+            return;
+        }
+
         $class = VariableConversion::convertTableNameToClassName($table);
 
         $name = rtrim($this->parseName($prefix . $class), 's');
@@ -155,10 +173,7 @@ class MakeModelsCommand extends GeneratorCommand
         $class = str_replace('{{guarded}}', 'protected $guarded = ' . VariableConversion::convertArrayToString($properties['guarded']) . ';', $class);
         $class = str_replace('{{timestamps}}', 'public $timestamps = ' . VariableConversion::convertBooleanToString($properties['timestamps']) . ';', $class);
 
-        
-        
-
-        return $this->replaceTokensWithSetGetFunctions($properties);
+        return $this->replaceTokensWithSetGetFunctions($properties, $class);
     }
 
     /**
@@ -169,15 +184,15 @@ class MakeModelsCommand extends GeneratorCommand
      * @param  string $class      
      * @return string
      */
-    protected  function replaceTokensWithSetGet($properties, $class) {
+    protected  function replaceTokensWithSetGetFunctions($properties, $class) {
         $getters = "";
         $setters = "";
 
-        $fillableGetSet = new SetGetGenerator($properties['fillable']);
+        $fillableGetSet = new SetGetGenerator($properties['fillable'], $this->getFunctionStub, $this->setFunctionStub);
         $getters .= $fillableGetSet->generateGetFunctions();
         $setters .= $fillableGetSet->generateSetFunctions();
 
-        $guardedGetSet = new SetGetGenerator($properties['guarded']);
+        $guardedGetSet = new SetGetGenerator($properties['guarded'], $this->getFunctionStub, $this->setFunctionStub);
         $getters .= $guardedGetSet->generateGetFunctions();
 
         return str_replace([
@@ -271,6 +286,9 @@ class MakeModelsCommand extends GeneratorCommand
             ['fillable', null, InputOption::VALUE_OPTIONAL, 'Rules for $fillable array columns', $this->fillableRules],
             ['guarded', null, InputOption::VALUE_OPTIONAL, 'Rules for $guarded array columns', $this->guardedRules],
             ['timestamps', null, InputOption::VALUE_OPTIONAL, 'Rules for $timestamps columns', $this->timestampRules],
+            ['ignore', "i", InputOption::VALUE_OPTIONAL, 'Ignores the tables you define, separated with ,', null],
+            ['ignoresystem', "s", InputOption::VALUE_NONE, 'If you want to ignore system tables.
+            Just type --ignoresystem or -s', null]
         ];
     }
 }
