@@ -82,11 +82,13 @@ class MakeModelsCommand extends GeneratorCommand
      */
     public function fire()
     {
-        // load the get/set function stubs
-        $folder = __DIR__ . '/../stubs/';
+        if ($this->option("getset")) {
+            // load the get/set function stubs
+            $folder = __DIR__ . '/../stubs/';
         
-        $this->setFunctionStub = $this->files->get($folder."setFunction.stub");
-        $this->getFunctionStub = $this->files->get($folder."getFunction.stub");
+            $this->setFunctionStub = $this->files->get($folder."setFunction.stub");
+            $this->getFunctionStub = $this->files->get($folder."getFunction.stub");
+        }
 
         // create rule processor
 
@@ -173,7 +175,11 @@ class MakeModelsCommand extends GeneratorCommand
         $class = str_replace('{{guarded}}', 'protected $guarded = ' . VariableConversion::convertArrayToString($properties['guarded']) . ';', $class);
         $class = str_replace('{{timestamps}}', 'public $timestamps = ' . VariableConversion::convertBooleanToString($properties['timestamps']) . ';', $class);
 
-        return $this->replaceTokensWithSetGetFunctions($properties, $class);
+        if ($this->option("getset")) {
+            $class = $this->replaceTokensWithSetGetFunctions($properties, $class);
+        }
+
+        return $class;
     }
 
     /**
@@ -288,7 +294,8 @@ class MakeModelsCommand extends GeneratorCommand
             ['timestamps', null, InputOption::VALUE_OPTIONAL, 'Rules for $timestamps columns', $this->timestampRules],
             ['ignore', "i", InputOption::VALUE_OPTIONAL, 'Ignores the tables you define, separated with ,', null],
             ['ignoresystem', "s", InputOption::VALUE_NONE, 'If you want to ignore system tables.
-            Just type --ignoresystem or -s', null]
+            Just type --ignoresystem or -s', null],
+            ['getset', 'm', InputOption::VALUE_NONE, 'Defines if you want to generate set and get methods', false]
         ];
     }
 }
