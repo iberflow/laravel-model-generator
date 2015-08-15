@@ -9,4 +9,8 @@ class {{class}} extends {{extends}} {
     {{fillable}}
 
     {{guarded}}
+
+    {{getters}}
+
+    {{setters}}
 }

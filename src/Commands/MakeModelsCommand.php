@@ -1,6 +1,7 @@
 <?php namespace Iber\Generator\Commands;
 
 use Iber\Generator\Utilities\RuleProcessor;
+use Iber\Generator\Utilities\SetGetGenerator;
 use Iber\Generator\Utilities\VariableConversion;
 use Symfony\Component\Console\Input\InputOption;
 use Illuminate\Console\GeneratorCommand;
@@ -64,12 +65,31 @@ class MakeModelsCommand extends GeneratorCommand
     protected $timestampRules = 'ends:_at'; //['ends' => ['_at']];
 
     /**
+     * Contains the template stub for set function
+     * @var string
+     */
+    protected $setFunctionStub;
+    /**
+     * Contains the template stub for get function
+     * @var string
+     */
+    protected $getFunctionStub;
+
+    /**
      * Execute the console command.
      *
      * @return mixed
      */
     public function fire()
     {
+        // load the get/set function stubs
+        $folder = __DIR__ . '/../stubs/';
+        
+        $this->setFunctionStub = $this->files->get($folder."setFunction.stub");
+        $this->getFunctionStub = $this->files->get($folder."getFunction.stub");
+
+        // create rule processor
+
         $this->ruleProcessor = new RuleProcessor();
 
         $tables = $this->getSchemaTables();
@@ -135,7 +155,38 @@ class MakeModelsCommand extends GeneratorCommand
         $class = str_replace('{{guarded}}', 'protected $guarded = ' . VariableConversion::convertArrayToString($properties['guarded']) . ';', $class);
         $class = str_replace('{{timestamps}}', 'public $timestamps = ' . VariableConversion::convertBooleanToString($properties['timestamps']) . ';', $class);
 
-        return $class;
+        
+        
+
+        return $this->replaceTokensWithSetGetFunctions($properties);
+    }
+
+    /**
+     * Replaces setters and getters from the stub. The functions are created
+     * from provider properties.
+     * 
+     * @param  array $properties 
+     * @param  string $class      
+     * @return string
+     */
+    protected  function replaceTokensWithSetGet($properties, $class) {
+        $getters = "";
+        $setters = "";
+
+        $fillableGetSet = new SetGetGenerator($properties['fillable']);
+        $getters .= $fillableGetSet->generateGetFunctions();
+        $setters .= $fillableGetSet->generateSetFunctions();
+
+        $guardedGetSet = new SetGetGenerator($properties['guarded']);
+        $getters .= $guardedGetSet->generateGetFunctions();
+
+        return str_replace([
+            '{{setters}}',
+            '{{getters}}'
+            ], [
+            $setters,
+            $getters
+            ], $class);
     }
 
     /**
