@@ -4,6 +4,6 @@
 	 * @return $this
 	 */
 	public function {{ function }}($value) {
-		$this->attributes["{{ attribute }}"] = $value;
+		$this->{{ attribute }} = $value;
 		return $this;
 	}
