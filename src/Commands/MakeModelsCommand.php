@@ -1,6 +1,7 @@
 <?php namespace Iber\Generator\Commands;
 
 use Iber\Generator\Utilities\RuleProcessor;
+use Iber\Generator\Utilities\SetGetGenerator;
 use Iber\Generator\Utilities\VariableConversion;
 use Symfony\Component\Console\Input\InputOption;
 use Illuminate\Console\GeneratorCommand;
@@ -64,12 +65,33 @@ class MakeModelsCommand extends GeneratorCommand
     protected $timestampRules = 'ends:_at'; //['ends' => ['_at']];
 
     /**
+     * Contains the template stub for set function
+     * @var string
+     */
+    protected $setFunctionStub;
+    /**
+     * Contains the template stub for get function
+     * @var string
+     */
+    protected $getFunctionStub;
+
+    /**
      * Execute the console command.
      *
      * @return mixed
      */
     public function fire()
     {
+        if ($this->option("getset")) {
+            // load the get/set function stubs
+            $folder = __DIR__ . '/../stubs/';
+        
+            $this->setFunctionStub = $this->files->get($folder."setFunction.stub");
+            $this->getFunctionStub = $this->files->get($folder."getFunction.stub");
+        }
+
+        // create rule processor
+
         $this->ruleProcessor = new RuleProcessor();
 
         $tables = $this->getSchemaTables();
@@ -100,6 +122,24 @@ class MakeModelsCommand extends GeneratorCommand
     {
         //prefix is the sub-directory within app
         $prefix = $this->option('dir');
+
+        $ignoreTable = $this->option("ignore");
+
+        if ($this->option("ignoresystem")) {
+            $ignoreSystem = "users,permissions,permission_role,roles,role_user,users,migrations,password_resets";
+
+            if (is_string($ignoreTable)) {
+                $ignoreTable.=",".$ignoreSystem;
+            } else {
+                $ignoreTable = $ignoreSystem;
+            }
+        }
+
+        // if we have ignore tables, we need to find all the posibilites
+        if (is_string($ignoreTable) && preg_match("/^".$table."|^".$table.",|,".$table.",|,".$table."$/", $ignoreTable)) {
+            $this->info($table." is ignored");
+            return;
+        }
 
         $class = VariableConversion::convertTableNameToClassName($table);
 
@@ -135,7 +175,39 @@ class MakeModelsCommand extends GeneratorCommand
         $class = str_replace('{{guarded}}', 'protected $guarded = ' . VariableConversion::convertArrayToString($properties['guarded']) . ';', $class);
         $class = str_replace('{{timestamps}}', 'public $timestamps = ' . VariableConversion::convertBooleanToString($properties['timestamps']) . ';', $class);
 
+        if ($this->option("getset")) {
+            $class = $this->replaceTokensWithSetGetFunctions($properties, $class);
+        }
+
         return $class;
+    }
+
+    /**
+     * Replaces setters and getters from the stub. The functions are created
+     * from provider properties.
+     * 
+     * @param  array $properties 
+     * @param  string $class      
+     * @return string
+     */
+    protected  function replaceTokensWithSetGetFunctions($properties, $class) {
+        $getters = "";
+        $setters = "";
+
+        $fillableGetSet = new SetGetGenerator($properties['fillable'], $this->getFunctionStub, $this->setFunctionStub);
+        $getters .= $fillableGetSet->generateGetFunctions();
+        $setters .= $fillableGetSet->generateSetFunctions();
+
+        $guardedGetSet = new SetGetGenerator($properties['guarded'], $this->getFunctionStub, $this->setFunctionStub);
+        $getters .= $guardedGetSet->generateGetFunctions();
+
+        return str_replace([
+            '{{setters}}',
+            '{{getters}}'
+            ], [
+            $setters,
+            $getters
+            ], $class);
     }
 
     /**
@@ -220,6 +292,10 @@ class MakeModelsCommand extends GeneratorCommand
             ['fillable', null, InputOption::VALUE_OPTIONAL, 'Rules for $fillable array columns', $this->fillableRules],
             ['guarded', null, InputOption::VALUE_OPTIONAL, 'Rules for $guarded array columns', $this->guardedRules],
             ['timestamps', null, InputOption::VALUE_OPTIONAL, 'Rules for $timestamps columns', $this->timestampRules],
+            ['ignore', "i", InputOption::VALUE_OPTIONAL, 'Ignores the tables you define, separated with ,', null],
+            ['ignoresystem', "s", InputOption::VALUE_NONE, 'If you want to ignore system tables.
+            Just type --ignoresystem or -s'],
+            ['getset', 'm', InputOption::VALUE_NONE, 'Defines if you want to generate set and get methods']
         ];
     }
 }

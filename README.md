@@ -17,6 +17,8 @@ Options:
  - --fillable=""            Rules for $fillable array columns (default: "")
  - --guarded=""             Rules for $guarded array columns (default: "ends:_id|ids,equals:id")
  - --timestamps=""          Rules for $timestamps columns (default: "ends:_at")
+ - --ignore=""|-i=""        A table names to ignore
+ - --ignoresystem|-s        List of system tables (auth, migrations, entrust package)
 
 # Running the generator
 ```php artisan make:models```

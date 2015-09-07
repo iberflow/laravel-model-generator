@@ -1,0 +1,7 @@
+
+	/**
+	 * @return mixed
+	 */
+	public function {{ function }}() {
+		return $this->{{ attribute }};
+	}
