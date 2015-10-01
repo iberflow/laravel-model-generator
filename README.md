@@ -5,6 +5,7 @@ It plugs into your existing database and generates model class files based on th
 
 # Installation
 Add ```"ignasbernotas/laravel-model-generator": "dev-master"``` to your composer.json file.
+
 You'll only want to use these generators for local development, so you don't want to update the production providers array in config/app.php. Instead, add the provider in app/Providers/AppServiceProvider.php, like so:
 ```php
 public function register()
