@@ -177,6 +177,8 @@ class MakeModelsCommand extends GeneratorCommand
 
         if ($this->option("getset")) {
             $class = $this->replaceTokensWithSetGetFunctions($properties, $class);
+        } else {
+            $class = str_replace(['{{setters}}', '{{getters}}'], '', $class);
         }
 
         return $class;
@@ -205,8 +207,8 @@ class MakeModelsCommand extends GeneratorCommand
             '{{setters}}',
             '{{getters}}'
             ], [
-            $setters,
-            $getters
+                $setters,
+                $getters
             ], $class);
     }
 

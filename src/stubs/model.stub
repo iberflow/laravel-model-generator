@@ -1,8 +1,8 @@
-<?php namespace DummyNamespace;
+<?php namespace {{namespace}};
 
 use Illuminate\Database\Eloquent\Model;
 
-class DummyClass extends {{extends}} {
+class {{class}} extends {{extends}} {
 
     {{timestamps}}
 
