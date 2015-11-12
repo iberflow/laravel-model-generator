@@ -32,9 +32,9 @@ class VariableConversion
     {
         $string = '[';
         if (!empty($array)) {
-            $string .= "'";
-            $string .= implode("', '", $array);
-            $string .= "'";
+            $string .= "\n        '";
+            $string .= implode("',\n        '", $array);
+            $string .= "'\n    ";
         }
         $string .= ']';
 

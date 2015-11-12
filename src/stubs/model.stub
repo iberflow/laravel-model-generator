@@ -1,8 +1,14 @@
-<?php namespace DummyNamespace;
+<?php
+
+namespace DummyNamespace;
 
 use Illuminate\Database\Eloquent\Model;
 
-class DummyClass extends {{extends}} {
+/**
+ * Class DummyClass
+ */
+class DummyClass extends {{extends}}
+{
 
     {{timestamps}}
 
@@ -13,4 +19,6 @@ class DummyClass extends {{extends}} {
     {{getters}}
 
     {{setters}}
+
+
 }

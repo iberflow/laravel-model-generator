@@ -85,9 +85,9 @@ class MakeModelsCommand extends GeneratorCommand
         if ($this->option("getset")) {
             // load the get/set function stubs
             $folder = __DIR__ . '/../stubs/';
-        
-            $this->setFunctionStub = $this->files->get($folder."setFunction.stub");
-            $this->getFunctionStub = $this->files->get($folder."getFunction.stub");
+
+            $this->setFunctionStub = $this->files->get($folder . "setFunction.stub");
+            $this->getFunctionStub = $this->files->get($folder . "getFunction.stub");
         }
 
         // create rule processor
@@ -117,6 +117,7 @@ class MakeModelsCommand extends GeneratorCommand
      * Generate a model file from a database table.
      *
      * @param $table
+     * @return void
      */
     protected function generateTable($table)
     {
@@ -129,15 +130,15 @@ class MakeModelsCommand extends GeneratorCommand
             $ignoreSystem = "users,permissions,permission_role,roles,role_user,users,migrations,password_resets";
 
             if (is_string($ignoreTable)) {
-                $ignoreTable.=",".$ignoreSystem;
+                $ignoreTable .= "," . $ignoreSystem;
             } else {
                 $ignoreTable = $ignoreSystem;
             }
         }
 
         // if we have ignore tables, we need to find all the posibilites
-        if (is_string($ignoreTable) && preg_match("/^".$table."|^".$table.",|,".$table.",|,".$table."$/", $ignoreTable)) {
-            $this->info($table." is ignored");
+        if (is_string($ignoreTable) && preg_match("/^" . $table . "|^" . $table . ",|," . $table . ",|," . $table . "$/", $ignoreTable)) {
+            $this->info($table . " is ignored");
             return;
         }
 
@@ -145,15 +146,16 @@ class MakeModelsCommand extends GeneratorCommand
 
         $name = rtrim($this->parseName($prefix . $class), 's');
 
-        if ($this->files->exists($path = $this->getPath($name))) {
-            return $this->error($this->extends . ' for '.$table.' already exists!');
+        if ($this->files->exists($path = $this->getPath($name))
+            && !$this->option('force')) {
+            return $this->error($this->extends . ' for ' . $table . ' already exists!');
         }
 
         $this->makeDirectory($path);
 
         $this->files->put($path, $this->replaceTokens($name, $table));
 
-        $this->info($this->extends . ' for '.$table.' created successfully.');
+        $this->info($this->extends . ' for ' . $table . ' created successfully.');
     }
 
     /**
@@ -178,7 +180,7 @@ class MakeModelsCommand extends GeneratorCommand
         if ($this->option("getset")) {
             $class = $this->replaceTokensWithSetGetFunctions($properties, $class);
         } else {
-            $class = str_replace(['{{setters}}', '{{getters}}'], '', $class);
+            $class = str_replace(["{{setters}}\n\n", "{{getters}}\n\n"], '', $class);
         }
 
         return $class;
@@ -187,12 +189,13 @@ class MakeModelsCommand extends GeneratorCommand
     /**
      * Replaces setters and getters from the stub. The functions are created
      * from provider properties.
-     * 
-     * @param  array $properties 
-     * @param  string $class      
+     *
+     * @param  array $properties
+     * @param  string $class
      * @return string
      */
-    protected  function replaceTokensWithSetGetFunctions($properties, $class) {
+    protected function replaceTokensWithSetGetFunctions($properties, $class)
+    {
         $getters = "";
         $setters = "";
 
@@ -204,12 +207,12 @@ class MakeModelsCommand extends GeneratorCommand
         $getters .= $guardedGetSet->generateGetFunctions();
 
         return str_replace([
-            '{{setters}}',
-            '{{getters}}'
-            ], [
-                $setters,
-                $getters
-            ], $class);
+            "{{setters}}",
+            "{{getters}}"
+        ], [
+            $setters,
+            $getters
+        ], $class);
     }
 
     /**
@@ -231,7 +234,7 @@ class MakeModelsCommand extends GeneratorCommand
 
             //priotitze guarded properties and move to fillable
             if ($this->ruleProcessor->check($this->option('fillable'), $column->name)) {
-                if(!in_array($column->name, ['id', 'created_at', 'updated_at', 'deleted_at'])) {
+                if (!in_array($column->name, ['id', 'created_at', 'updated_at', 'deleted_at'])) {
                     $fillable[] = $column->name;
                 }
             }
@@ -295,6 +298,7 @@ class MakeModelsCommand extends GeneratorCommand
             ['guarded', null, InputOption::VALUE_OPTIONAL, 'Rules for $guarded array columns', $this->guardedRules],
             ['timestamps', null, InputOption::VALUE_OPTIONAL, 'Rules for $timestamps columns', $this->timestampRules],
             ['ignore', "i", InputOption::VALUE_OPTIONAL, 'Ignores the tables you define, separated with ,', null],
+            ['force', "f", InputOption::VALUE_OPTIONAL, 'Force override', false],
             ['ignoresystem', "s", InputOption::VALUE_NONE, 'If you want to ignore system tables.
             Just type --ignoresystem or -s'],
             ['getset', 'm', InputOption::VALUE_NONE, 'Defines if you want to generate set and get methods']
