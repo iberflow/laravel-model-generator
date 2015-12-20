@@ -1,10 +1,13 @@
-<?php namespace Iber\Generator\Commands;
+<?php
 
+namespace Iber\Generator\Commands;
+
+use Illuminate\Support\Pluralizer;
+use Illuminate\Console\GeneratorCommand;
 use Iber\Generator\Utilities\RuleProcessor;
 use Iber\Generator\Utilities\SetGetGenerator;
 use Iber\Generator\Utilities\VariableConversion;
 use Symfony\Component\Console\Input\InputOption;
-use Illuminate\Console\GeneratorCommand;
 
 class MakeModelsCommand extends GeneratorCommand
 {
@@ -144,7 +147,7 @@ class MakeModelsCommand extends GeneratorCommand
 
         $class = VariableConversion::convertTableNameToClassName($table);
 
-        $name = rtrim($this->parseName($prefix . $class), 's');
+        $name = Pluralizer::singular($this->parseName($prefix . $class));
 
         if ($this->files->exists($path = $this->getPath($name))
             && !$this->option('force')) {
