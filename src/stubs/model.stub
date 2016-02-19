@@ -2,15 +2,14 @@
 
 namespace DummyNamespace;
 
-use Illuminate\Database\Eloquent\Model;
+use {{extends}};
 
 /**
  * Class DummyClass
  */
-class DummyClass extends {{extends}}
+class DummyClass extends {{shortNameExtends}}
 {
-
-    {{timestamps}}
+	{{primaryKey}}{{timestamps}}
 
     {{fillable}}
 
