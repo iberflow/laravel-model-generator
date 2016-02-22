@@ -185,7 +185,9 @@ class MakeModelsCommand extends GeneratorCommand
 
         $extends = $this->option('extends');
 
-        $class = str_replace('{{primaryKey}}', $properties['primaryKey'] ? 'protected $primaryKey = \'' . $properties['primaryKey'] . '\';' . "\r\n\r\n\t" : '', $class);
+        $class = str_replace('{{table}}', 'protected $table = \'' . $table . '\';', $class);
+        
+        $class = str_replace('{{primaryKey}}', $properties['primaryKey'] ? ('protected $primaryKey = \'' . $properties['primaryKey'] . '\';' . "\r\n\r\n\t") : '', $class);
         
         $class = str_replace('{{extends}}', $extends, $class);
         $class = str_replace('{{shortNameExtends}}', explode('\\', $extends)[count(explode('\\', $extends))-1], $class);
@@ -241,8 +243,7 @@ class MakeModelsCommand extends GeneratorCommand
     protected function getTableProperties($table)
     {
         $primaryKey = $this->getTablePrimaryKey($table);
-
-        $primaryKey = $primaryKey != 'id' ?: null; 
+        $primaryKey = $primaryKey != 'id' ? $primaryKey : null; 
 
         $fillable = [];
         $guarded = [];
