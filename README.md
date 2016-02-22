@@ -27,6 +27,7 @@ Options:
  - --timestamps=""          Rules for $timestamps columns (default: "ends:_at")
  - --ignore=""|-i=""        A table names to ignore
  - --ignoresystem|-s        List of system tables (auth, migrations, entrust package)
+ - --tables=""              Tables to generate (E.g.: --tables="my_db_table1,my_db_table2"
 
 # Running the generator
 ```php artisan make:models```
