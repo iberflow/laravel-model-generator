@@ -37,7 +37,7 @@ class MakeModelsCommand extends GeneratorCommand
      *
      * @var string
      */
-    protected $extends = 'Model';
+    protected $extends = 'Illuminate\Database\Eloquent\Model';
 
     /**
      * Rule processor class instance.
@@ -111,7 +111,15 @@ class MakeModelsCommand extends GeneratorCommand
      */
     protected function getSchemaTables()
     {
-        $tables = \DB::select("SELECT table_name AS `name` FROM information_schema.tables WHERE table_schema = DATABASE()");
+        $filterTablesWhere = '';
+        if ($this->option("tables")) {
+            $tableNamesToFilter = explode(',', $this->option('tables'));
+            if(is_array($tableNamesToFilter) && count($tableNamesToFilter) > 0) {
+                $filterTablesWhere = ' AND table_name IN (\'' . implode('\', \'', $tableNamesToFilter) . '\')';
+            }
+        }
+
+        $tables = \DB::select("SELECT table_name AS `name` FROM information_schema.tables WHERE table_schema = DATABASE()" . $filterTablesWhere);
 
         return $tables;
     }
@@ -175,7 +183,14 @@ class MakeModelsCommand extends GeneratorCommand
 
         $properties = $this->getTableProperties($table);
 
-        $class = str_replace('{{extends}}', $this->option('extends'), $class);
+        $extends = $this->option('extends');
+
+        $class = str_replace('{{table}}', 'protected $table = \'' . $table . '\';', $class);
+        
+        $class = str_replace('{{primaryKey}}', $properties['primaryKey'] ? ('protected $primaryKey = \'' . $properties['primaryKey'] . '\';' . "\r\n\r\n\t") : '', $class);
+        
+        $class = str_replace('{{extends}}', $extends, $class);
+        $class = str_replace('{{shortNameExtends}}', explode('\\', $extends)[count(explode('\\', $extends))-1], $class);
         $class = str_replace('{{fillable}}', 'protected $fillable = ' . VariableConversion::convertArrayToString($properties['fillable']) . ';', $class);
         $class = str_replace('{{guarded}}', 'protected $guarded = ' . VariableConversion::convertArrayToString($properties['guarded']) . ';', $class);
         $class = str_replace('{{timestamps}}', 'public $timestamps = ' . VariableConversion::convertBooleanToString($properties['timestamps']) . ';', $class);
@@ -227,6 +242,9 @@ class MakeModelsCommand extends GeneratorCommand
      */
     protected function getTableProperties($table)
     {
+        $primaryKey = $this->getTablePrimaryKey($table);
+        $primaryKey = $primaryKey != 'id' ? $primaryKey : null; 
+
         $fillable = [];
         $guarded = [];
         $timestamps = false;
@@ -237,7 +255,7 @@ class MakeModelsCommand extends GeneratorCommand
 
             //priotitze guarded properties and move to fillable
             if ($this->ruleProcessor->check($this->option('fillable'), $column->name)) {
-                if (!in_array($column->name, ['id', 'created_at', 'updated_at', 'deleted_at'])) {
+                if (!in_array($column->name, array_merge(['id', 'created_at', 'updated_at', 'deleted_at'], $primaryKey ? [ $primaryKey ] : []))) {
                     $fillable[] = $column->name;
                 }
             }
@@ -250,7 +268,7 @@ class MakeModelsCommand extends GeneratorCommand
             }
         }
 
-        return ['fillable' => $fillable, 'guarded' => $guarded, 'timestamps' => $timestamps];
+        return ['primaryKey' => $primaryKey, 'fillable' => $fillable, 'guarded' => $guarded, 'timestamps' => $timestamps];
     }
 
     /**
@@ -265,6 +283,29 @@ class MakeModelsCommand extends GeneratorCommand
         $columns = \DB::select("SELECT COLUMN_NAME as `name` FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = '{$table}'");
 
         return $columns;
+    }
+
+    /**
+     * Get table primary key column.
+     *
+     * @param $table
+     *
+     * @return string
+     */
+    protected function getTablePrimaryKey($table)
+    {
+        $primaryKeyResult = \DB::select(
+            "SELECT COLUMN_NAME
+             FROM information_schema.COLUMNS 
+             WHERE  TABLE_SCHEMA = DATABASE() AND 
+                    TABLE_NAME = '{$table}' AND 
+                    COLUMN_KEY = 'PRI'");
+
+        if (count($primaryKeyResult) == 1){
+            return $primaryKeyResult[0]->COLUMN_NAME;
+        }
+
+        return null;
     }
 
     /**
@@ -295,6 +336,7 @@ class MakeModelsCommand extends GeneratorCommand
     protected function getOptions()
     {
         return [
+            ['tables', null, InputOption::VALUE_OPTIONAL, 'Comma separated table names to generate', null],
             ['dir', null, InputOption::VALUE_OPTIONAL, 'Model directory', $this->namespace],
             ['extends', null, InputOption::VALUE_OPTIONAL, 'Parent class', $this->extends],
             ['fillable', null, InputOption::VALUE_OPTIONAL, 'Rules for $fillable array columns', $this->fillableRules],
