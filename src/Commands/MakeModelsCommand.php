@@ -298,7 +298,7 @@ class MakeModelsCommand extends GeneratorCommand
        switch (env("DB_CONNECTION")) {
           
           case 'mysql':
-            $columns = \DB::select("SELECT COLUMN_NAME as `name` FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = '{$table}'");
+            $columns = \DB::select("SELECT COLUMN_NAME as `name` FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = '" . env("DB_DATABASE") . "' AND TABLE_NAME = '{$table}'");
             break;
             
           case 'sqlsrv' || 'dblib':
@@ -328,7 +328,7 @@ class MakeModelsCommand extends GeneratorCommand
              $primaryKeyResult = \DB::select(
                   "SELECT COLUMN_NAME
                   FROM information_schema.COLUMNS 
-                  WHERE  TABLE_SCHEMA = DATABASE() AND 
+                  WHERE  TABLE_SCHEMA = '" . env("DB_DATABASE") . "' AND 
                          TABLE_NAME = '{$table}' AND 
                          COLUMN_KEY = 'PRI'");          
              break;
