@@ -130,10 +130,7 @@ class MakeModelsCommand extends GeneratorCommand
            
            case 'pgsql':            
                $tables = \DB::select("SELECT table_name AS name FROM information_schema.tables WHERE table_schema = 'public' AND table_type='BASE TABLE' AND table_catalog = '" . env('DB_DATABASE') . "'" . $filterTablesWhere);   
-               
-           default:
-               $tables = [];
-               echo env("DB_CONNECTION") . ': Unsupported database';
+               break;
         }
         
         return $tables;
@@ -352,7 +349,8 @@ class MakeModelsCommand extends GeneratorCommand
                    INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE AS ku
                    ON tc.CONSTRAINT_TYPE = 'PRIMARY KEY' 
                    AND tc.CONSTRAINT_NAME = ku.CONSTRAINT_NAME
-                   WHERE ku.TABLE_CATALOG ='" . env("DB_DATABASE") . "' AND ku.TABLE_NAME='{$table}';");            
+                   WHERE ku.TABLE_CATALOG ='" . env("DB_DATABASE") . "' AND ku.TABLE_NAME='{$table}';");
+             break;
           
        }
 
