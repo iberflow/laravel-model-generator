@@ -118,9 +118,21 @@ class MakeModelsCommand extends GeneratorCommand
                 $filterTablesWhere = ' AND table_name IN (\'' . implode('\', \'', $tableNamesToFilter) . '\')';
             }
         }
-
-        $tables = \DB::select("SELECT table_name AS `name` FROM information_schema.tables WHERE table_schema = DATABASE()" . $filterTablesWhere);
-
+        
+        switch (env('DB_CONNECTION')) {
+           case 'mysql':
+               $tables = \DB::select("SELECT table_name AS name FROM information_schema.tables WHERE table_type='BASE TABLE' AND table_schema = '" . env('DB_DATABASE') . "'" . $filterTablesWhere);
+               break;
+               
+           case 'sqlsrv' || 'dblib':
+               $tables = \DB::select("SELECT table_name AS name FROM information_schema.tables WHERE table_type='BASE TABLE' AND table_catalog = '" . env('DB_DATABASE') . "'" . $filterTablesWhere);   
+               break;
+           
+           case 'pgsql':            
+               $tables = \DB::select("SELECT table_name AS name FROM information_schema.tables WHERE table_schema = 'public' AND table_type='BASE TABLE' AND table_catalog = '" . env('DB_DATABASE') . "'" . $filterTablesWhere);   
+               break;
+        }
+        
         return $tables;
     }
 
@@ -280,8 +292,21 @@ class MakeModelsCommand extends GeneratorCommand
      */
     protected function getTableColumns($table)
     {
-        $columns = \DB::select("SELECT COLUMN_NAME as `name` FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = '{$table}'");
-
+       switch (env("DB_CONNECTION")) {
+          
+          case 'mysql':
+            $columns = \DB::select("SELECT COLUMN_NAME as `name` FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = '" . env("DB_DATABASE") . "' AND TABLE_NAME = '{$table}'");
+            break;
+            
+          case 'sqlsrv' || 'dblib':
+            $columns = \DB::select("SELECT COLUMN_NAME as 'name' FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_CATALOG = '" . env("DB_DATABASE") . "' AND TABLE_NAME = '{$table}'");
+            break;
+            
+          case 'pgsql':
+            $columns = \DB::select("SELECT COLUMN_NAME as name FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_CATALOG = '" . env("DB_DATABASE") . "' AND TABLE_NAME = '{$table}'");
+            break;          
+       }
+        
         return $columns;
     }
 
@@ -294,12 +319,40 @@ class MakeModelsCommand extends GeneratorCommand
      */
     protected function getTablePrimaryKey($table)
     {
-        $primaryKeyResult = \DB::select(
-            "SELECT COLUMN_NAME
-             FROM information_schema.COLUMNS 
-             WHERE  TABLE_SCHEMA = DATABASE() AND 
-                    TABLE_NAME = '{$table}' AND 
-                    COLUMN_KEY = 'PRI'");
+       
+       switch (env("DB_CONNECTION")) {
+          case 'mysql':
+             $primaryKeyResult = \DB::select(
+                  "SELECT COLUMN_NAME
+                  FROM information_schema.COLUMNS 
+                  WHERE  TABLE_SCHEMA = '" . env("DB_DATABASE") . "' AND 
+                         TABLE_NAME = '{$table}' AND 
+                         COLUMN_KEY = 'PRI'");          
+             break;
+             
+          case 'sqlsrv' || 'dblib':
+          
+             $primaryKeyResult = \DB::select(
+                  "SELECT ku.COLUMN_NAME
+                   FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS AS tc
+                   INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE AS ku
+                   ON tc.CONSTRAINT_TYPE = 'PRIMARY KEY' 
+                   AND tc.CONSTRAINT_NAME = ku.CONSTRAINT_NAME
+                   WHERE ku.TABLE_CATALOG ='" . env("DB_DATABASE") . "' AND ku.TABLE_NAME='{$table}';");
+            break;
+
+          case 'pgsql':
+          
+             $primaryKeyResult = \DB::select(
+                  "SELECT ku.COLUMN_NAME
+                   FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS AS tc
+                   INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE AS ku
+                   ON tc.CONSTRAINT_TYPE = 'PRIMARY KEY' 
+                   AND tc.CONSTRAINT_NAME = ku.CONSTRAINT_NAME
+                   WHERE ku.TABLE_CATALOG ='" . env("DB_DATABASE") . "' AND ku.TABLE_NAME='{$table}';");
+             break;
+          
+       }
 
         if (count($primaryKeyResult) == 1){
             return $primaryKeyResult[0]->COLUMN_NAME;
