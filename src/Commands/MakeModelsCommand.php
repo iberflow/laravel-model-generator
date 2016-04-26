@@ -79,6 +79,11 @@ class MakeModelsCommand extends GeneratorCommand
     protected $getFunctionStub;
 
     /**
+     * @var string
+     */
+    protected $databaseEngine = 'mysql';
+
+    /**
      * Execute the console command.
      *
      * @return mixed
@@ -96,6 +101,7 @@ class MakeModelsCommand extends GeneratorCommand
         // create rule processor
 
         $this->ruleProcessor = new RuleProcessor();
+        $this->databaseEngine = config('database.default', 'mysql');
 
         $tables = $this->getSchemaTables();
 
@@ -119,7 +125,7 @@ class MakeModelsCommand extends GeneratorCommand
             }
         }
         
-        switch (env('DB_CONNECTION')) {
+        switch ($this->databaseEngine) {
            case 'mysql':
                $tables = \DB::select("SELECT table_name AS name FROM information_schema.tables WHERE table_type='BASE TABLE' AND table_schema = '" . env('DB_DATABASE') . "'" . $filterTablesWhere);
                break;
@@ -150,7 +156,7 @@ class MakeModelsCommand extends GeneratorCommand
         $ignoreTable = $this->option("ignore");
 
         if ($this->option("ignoresystem")) {
-            $ignoreSystem = "users,permissions,permission_role,roles,role_user,users,migrations,password_resets";
+            $ignoreSystem = "users,permissions,permission_role,roles,role_user,migrations,password_resets";
 
             if (is_string($ignoreTable)) {
                 $ignoreTable .= "," . $ignoreSystem;
@@ -292,7 +298,7 @@ class MakeModelsCommand extends GeneratorCommand
      */
     protected function getTableColumns($table)
     {
-       switch (env("DB_CONNECTION")) {
+       switch ($this->databaseEngine) {
           
           case 'mysql':
             $columns = \DB::select("SELECT COLUMN_NAME as `name` FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = '" . env("DB_DATABASE") . "' AND TABLE_NAME = '{$table}'");
@@ -320,7 +326,7 @@ class MakeModelsCommand extends GeneratorCommand
     protected function getTablePrimaryKey($table)
     {
        
-       switch (env("DB_CONNECTION")) {
+       switch ($this->databaseEngine) {
           case 'mysql':
              $primaryKeyResult = \DB::select(
                   "SELECT COLUMN_NAME
