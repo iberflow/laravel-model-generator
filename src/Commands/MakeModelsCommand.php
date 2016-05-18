@@ -129,9 +129,10 @@ class MakeModelsCommand extends GeneratorCommand
            case 'mysql':
                $tables = \DB::select("SELECT table_name AS name FROM information_schema.tables WHERE table_type='BASE TABLE' AND table_schema = '" . env('DB_DATABASE') . "'" . $filterTablesWhere);
                break;
-               
-           case 'sqlsrv' || 'dblib':
-               $tables = \DB::select("SELECT table_name AS name FROM information_schema.tables WHERE table_type='BASE TABLE' AND table_catalog = '" . env('DB_DATABASE') . "'" . $filterTablesWhere);   
+
+           case 'sqlsrv':
+           case 'dblib':
+               $tables = \DB::select("SELECT table_name AS name FROM information_schema.tables WHERE table_type='BASE TABLE' AND table_catalog = '" . env('DB_DATABASE') . "'" . $filterTablesWhere);
                break;
            
            case 'pgsql':            
@@ -303,8 +304,9 @@ class MakeModelsCommand extends GeneratorCommand
           case 'mysql':
             $columns = \DB::select("SELECT COLUMN_NAME as `name` FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = '" . env("DB_DATABASE") . "' AND TABLE_NAME = '{$table}'");
             break;
-            
-          case 'sqlsrv' || 'dblib':
+
+          case 'sqlsrv':
+          case 'dblib':
             $columns = \DB::select("SELECT COLUMN_NAME as 'name' FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_CATALOG = '" . env("DB_DATABASE") . "' AND TABLE_NAME = '{$table}'");
             break;
             
@@ -335,9 +337,10 @@ class MakeModelsCommand extends GeneratorCommand
                          TABLE_NAME = '{$table}' AND 
                          COLUMN_KEY = 'PRI'");          
              break;
-             
-          case 'sqlsrv' || 'dblib':
-          
+
+          case 'sqlsrv':
+          case 'dblib':
+
              $primaryKeyResult = \DB::select(
                   "SELECT ku.COLUMN_NAME
                    FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS AS tc
@@ -350,7 +353,7 @@ class MakeModelsCommand extends GeneratorCommand
           case 'pgsql':
           
              $primaryKeyResult = \DB::select(
-                  "SELECT ku.COLUMN_NAME
+                  "SELECT ku.COLUMN_NAME AS \"COLUMN_NAME\"
                    FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS AS tc
                    INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE AS ku
                    ON tc.CONSTRAINT_TYPE = 'PRIMARY KEY' 
