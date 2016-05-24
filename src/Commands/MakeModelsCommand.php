@@ -84,6 +84,11 @@ class MakeModelsCommand extends GeneratorCommand
     protected $databaseEngine = 'mysql';
 
     /**
+     * @var string
+     */
+    protected $databaseFetch = \PDO::FETCH_CLASS;
+
+    /**
      * Execute the console command.
      *
      * @return mixed
@@ -102,11 +107,13 @@ class MakeModelsCommand extends GeneratorCommand
 
         $this->ruleProcessor = new RuleProcessor();
         $this->databaseEngine = config('database.default', 'mysql');
+        $this->databaseFetch = config('database.fetch', \PDO::FETCH_CLASS);
 
         $tables = $this->getSchemaTables();
 
         foreach ($tables as $table) {
-            $this->generateTable($table->name);
+            $tableToGenerate = $this->databaseFetch == \PDO::FETCH_CLASS? $table->name : $table['name'];
+            $this->generateTable($tableToGenerate);
         }
     }
 
@@ -124,7 +131,7 @@ class MakeModelsCommand extends GeneratorCommand
                 $filterTablesWhere = ' AND table_name IN (\'' . implode('\', \'', $tableNamesToFilter) . '\')';
             }
         }
-        
+
         switch ($this->databaseEngine) {
            case 'mysql':
                $tables = \DB::select("SELECT table_name AS name FROM information_schema.tables WHERE table_type='BASE TABLE' AND table_schema = '" . env('DB_DATABASE') . "'" . $filterTablesWhere);
@@ -262,7 +269,7 @@ class MakeModelsCommand extends GeneratorCommand
     protected function getTableProperties($table)
     {
         $primaryKey = $this->getTablePrimaryKey($table);
-        $primaryKey = $primaryKey != 'id' ? $primaryKey : null; 
+        $primaryKey = $primaryKey != 'id' ? $primaryKey : null;
 
         $fillable = [];
         $guarded = [];
@@ -273,16 +280,18 @@ class MakeModelsCommand extends GeneratorCommand
         foreach ($columns as $column) {
 
             //priotitze guarded properties and move to fillable
-            if ($this->ruleProcessor->check($this->option('fillable'), $column->name)) {
-                if (!in_array($column->name, array_merge(['id', 'created_at', 'updated_at', 'deleted_at'], $primaryKey ? [ $primaryKey ] : []))) {
-                    $fillable[] = $column->name;
+            $columnName = $this->databaseFetch == \PDO::FETCH_CLASS ? $column->name : $column['name'];
+
+            if ($this->ruleProcessor->check($this->option('fillable'), $columnName)) {
+                if (!in_array($columnName, array_merge(['id', 'created_at', 'updated_at', 'deleted_at'], $primaryKey ? [ $primaryKey ] : []))) {
+                    $fillable[] = $columnName;
                 }
             }
-            if ($this->ruleProcessor->check($this->option('guarded'), $column->name)) {
-                $fillable[] = $column->name;
+            if ($this->ruleProcessor->check($this->option('guarded'), $columnName)) {
+                $fillable[] = $columnName;
             }
             //check if this model is timestampable
-            if ($this->ruleProcessor->check($this->option('timestamps'), $column->name)) {
+            if ($this->ruleProcessor->check($this->option('timestamps'), $columnName)) {
                 $timestamps = true;
             }
         }
@@ -345,26 +354,26 @@ class MakeModelsCommand extends GeneratorCommand
                   "SELECT ku.COLUMN_NAME
                    FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS AS tc
                    INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE AS ku
-                   ON tc.CONSTRAINT_TYPE = 'PRIMARY KEY' 
+                   ON tc.CONSTRAINT_TYPE = 'PRIMARY KEY'
                    AND tc.CONSTRAINT_NAME = ku.CONSTRAINT_NAME
                    WHERE ku.TABLE_CATALOG ='" . env("DB_DATABASE") . "' AND ku.TABLE_NAME='{$table}';");
             break;
 
           case 'pgsql':
-          
+
              $primaryKeyResult = \DB::select(
                   "SELECT ku.COLUMN_NAME AS \"COLUMN_NAME\"
                    FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS AS tc
                    INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE AS ku
-                   ON tc.CONSTRAINT_TYPE = 'PRIMARY KEY' 
+                   ON tc.CONSTRAINT_TYPE = 'PRIMARY KEY'
                    AND tc.CONSTRAINT_NAME = ku.CONSTRAINT_NAME
                    WHERE ku.TABLE_CATALOG ='" . env("DB_DATABASE") . "' AND ku.TABLE_NAME='{$table}';");
              break;
-          
+
        }
 
         if (count($primaryKeyResult) == 1){
-            return $primaryKeyResult[0]->COLUMN_NAME;
+            return $this->databaseFetch == \PDO::FETCH_CLASS ? $primaryKeyResult[0]->COLUMN_NAME : $primaryKeyResult[0]['COLUMN_NAME'];
         }
 
         return null;
