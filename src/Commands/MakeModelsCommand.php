@@ -102,6 +102,7 @@ class MakeModelsCommand extends GeneratorCommand
 
         $this->ruleProcessor = new RuleProcessor();
         $this->databaseEngine = config('database.default', 'mysql');
+        \DB::connection()->setFetchMode(\PDO::FETCH_CLASS);
 
         $tables = $this->getSchemaTables();
 
