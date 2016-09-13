@@ -1,13 +1,13 @@
 <?php
 
-namespace DummyNamespace;
+namespace {{namespace}};
 
 use {{extends}};
 
 /**
- * Class DummyClass
+ * Class {{className}}
  */
-class DummyClass extends {{shortNameExtends}}
+class {{className}} extends {{shortNameExtends}}
 {
     {{table}}
 
