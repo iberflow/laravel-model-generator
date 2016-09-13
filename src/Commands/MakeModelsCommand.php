@@ -206,9 +206,12 @@ class MakeModelsCommand extends GeneratorCommand
         $extends = $this->option('extends');
 
         $class = str_replace('{{table}}', 'protected $table = \'' . $table . '\';', $class);
-        
+
         $class = str_replace('{{primaryKey}}', $properties['primaryKey'] ? ('protected $primaryKey = \'' . $properties['primaryKey'] . '\';' . "\r\n\r\n\t") : '', $class);
-        
+
+        $class = str_replace('{{namespace}}', $this->namespace, $class);
+        // Sets the class name, as well as class name in phpdoc. The filename uses same func, and is set in generateTable()
+        $class = str_replace('{{className}}', VariableConversion::convertTableNameToClassName($table), $class);
         $class = str_replace('{{extends}}', $extends, $class);
         $class = str_replace('{{shortNameExtends}}', explode('\\', $extends)[count(explode('\\', $extends))-1], $class);
         $class = str_replace('{{fillable}}', 'protected $fillable = ' . VariableConversion::convertArrayToString($properties['fillable']) . ';', $class);
