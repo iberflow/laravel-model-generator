@@ -215,6 +215,8 @@ class MakeModelsCommand extends GeneratorCommand
 
         $extends = $this->option('extends');
 
+        $class = str_replace('{{connection}}', 'protected $connection = \'' . $this->connection->getConfig('name') . '\';', $class);
+
         $class = str_replace('{{table}}', 'protected $table = \'' . $table . '\';', $class);
         
         $class = str_replace('{{primaryKey}}', $properties['primaryKey'] ? ('protected $primaryKey = \'' . $properties['primaryKey'] . '\';' . "\r\n\r\n\t") : '', $class);
