@@ -42,6 +42,26 @@ class VariableConversion
     }
 
     /**
+     * Convert a PHP array into a PHP docblock.
+     *
+     * @param $array
+     *
+     * @return string
+     */
+    public static function convertArrayToDocblock($array)
+    {
+        $string = '';
+        if (!empty($array)) {
+            foreach ($array as $field=>$type) {
+                $string .= "\n * @property $type $field";
+            }
+        }
+        $string .= '\n *';
+
+        return $string;
+    }
+
+    /**
      * Convert a boolean into a string.
      *
      * @param $boolean

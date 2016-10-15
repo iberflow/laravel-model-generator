@@ -6,6 +6,8 @@ use {{extends}};
 
 /**
  * Class DummyClass
+ *
+ * {{docblock}}
  */
 class DummyClass extends {{shortNameExtends}}
 {

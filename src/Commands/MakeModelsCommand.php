@@ -206,7 +206,8 @@ class MakeModelsCommand extends GeneratorCommand
         $extends = $this->option('extends');
 
         $class = str_replace('{{table}}', 'protected $table = \'' . $table . '\';', $class);
-        
+        $class = str_replace('{{docblock}}', '' . VariableConversion::convertArrayToDocblock($properties['types']), $class);
+
         $class = str_replace('{{primaryKey}}', $properties['primaryKey'] ? ('protected $primaryKey = \'' . $properties['primaryKey'] . '\';' . "\r\n\r\n\t") : '', $class);
         
         $class = str_replace('{{extends}}', $extends, $class);
@@ -270,6 +271,7 @@ class MakeModelsCommand extends GeneratorCommand
         $timestamps = false;
 
         $columns = $this->getTableColumns($table);
+        $types = $this->getTableColumnTypes($table);
 
         foreach ($columns as $column) {
 
@@ -288,7 +290,7 @@ class MakeModelsCommand extends GeneratorCommand
             }
         }
 
-        return ['primaryKey' => $primaryKey, 'fillable' => $fillable, 'guarded' => $guarded, 'timestamps' => $timestamps];
+        return ['primaryKey' => $primaryKey, 'types'=>$types, 'fillable' => $fillable, 'guarded' => $guarded, 'timestamps' => $timestamps];
     }
 
     /**
@@ -318,6 +320,38 @@ class MakeModelsCommand extends GeneratorCommand
         
         return $columns;
     }
+
+    /**
+     * Get table columns with types.
+     *
+     * @param $table
+     * @return mixed
+     */
+    protected function getTableColumnTypes($table)
+    {
+        switch ($this->databaseEngine)
+        {
+            case 'mysql':
+                $columns = \DB::select("SELECT COLUMN_NAME as `name`, DATA_TYPE as `type` FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = '" . env("DB_DATABASE") . "' AND TABLE_NAME = '{$table}'");
+                break;
+
+            case 'sqlsrv':
+            case 'dblib':
+                $columns = \DB::select("SELECT COLUMN_NAME as 'name', DATA_TYPE as `type` FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_CATALOG = '" . env("DB_DATABASE") . "' AND TABLE_NAME = '{$table}'");
+                break;
+
+            case 'pgsql':
+                $columns = \DB::select("SELECT COLUMN_NAME as name, DATA_TYPE as type FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_CATALOG = '" . env("DB_DATABASE") . "' AND TABLE_NAME = '{$table}'");
+                break;
+        }
+
+        $ret = [];
+        foreach ($columns as $column) {
+            $ret[$column->name] = self::mapType($column->type);
+        }
+        return $ret;
+    }
+
 
     /**
      * Get table primary key column.
