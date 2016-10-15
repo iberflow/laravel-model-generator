@@ -1,13 +1,19 @@
-# Model generator
-Laravel 5 model generator for an existing schema. 
+# Model Generator
+> [Laravel 5](https://laravel.com/docs/5.3/) model generator for an existing schema. 
 
 It plugs into your existing database and generates model class files based on the existing tables.
 
 # Installation
-Add ```"ignasbernotas/laravel-model-generator": "^1"``` to your composer.json file.
 
-You'll only want to use these generators for local development, so you don't want to update the production providers array in config/app.php. Instead, add the provider in app/Providers/AppServiceProvider.php, like so:
+```sh
+composer require ignasbernotas/laravel-model-generator --dev
+```
+
+You'll only want to use these generators for local development, so you don't want to update the production providers array in `config/app.php`. Instead, add the provider in `app/Providers/AppServiceProvider.php`, like so:
+
 ```php
+<?php
+
 public function register()
 {
     if ($this->app->environment() == 'local') {
@@ -17,26 +23,50 @@ public function register()
 ```
 
 # Help & Options
-```php artisan help make:models```
+
+```sh
+php artisan help make:models
+
+Usage:
+  make:models [options]
 
 Options:
- - --dir=""                 Model directory (default: "Models/")
- - --extends=""             Parent class (default: "Model")
- - --fillable=""            Rules for $fillable array columns (default: "")
- - --guarded=""             Rules for $guarded array columns (default: "ends:_id|ids,equals:id")
- - --timestamps=""          Rules for $timestamps columns (default: "ends:_at")
- - --ignore=""|-i=""        A table names to ignore
- - --ignoresystem|-s        List of system tables (auth, migrations, entrust package)
- - --tables=""              Tables to generate (E.g.: --tables="my_db_table1,my_db_table2"
+      --tables[=TABLES]          Comma separated table names to generate
+      --dir[=DIR]                Model directory [default: "Models/"]
+      --extends[=EXTENDS]        Parent class [default: "Illuminate\Database\Eloquent\Model"]
+      --fillable[=FILLABLE]      Rules for $fillable array columns [default: ""]
+      --guarded[=GUARDED]        Rules for $guarded array columns [default: "ends:_guarded"]
+      --timestamps[=TIMESTAMPS]  Rules for $timestamps columns [default: "ends:_at"]
+  -i, --ignore[=IGNORE]          Ignores the tables you define, separated with ,
+  -f, --force[=FORCE]            Force override [default: false]
+  -s, --ignoresystem             If you want to ignore system tables.
+                                              Just type --ignoresystem or -s
+  -m, --getset                   Defines if you want to generate set and get methods
+  -h, --help                     Display this help message
+  -q, --quiet                    Do not output any message
+  -V, --version                  Display this application version
+      --ansi                     Force ANSI output
+      --no-ansi                  Disable ANSI output
+  -n, --no-interaction           Do not ask any interactive question
+      --env[=ENV]                The environment the command should run under.
+  -v|vv|vvv, --verbose           Increase the verbosity of messages: 1 for normal output, 2 for more verbose output and 3 for debug
+
+Help:
+  Build models from existing schema.
+```
 
 # Running the generator
-```php artisan make:models```
+
+```sh
+php artisan make:models
+```
 
 # Examples
 
 ## Table users
 ### SQL
-```
+
+```sql
 CREATE TABLE `users` (
 	`id` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
 	`username` VARCHAR(64) NULL DEFAULT NULL,
@@ -49,8 +79,11 @@ COLLATE='utf8_general_ci'
 ENGINE=InnoDB;
 ```
 ### Generated Models/Users.php class
-```
-<?php namespace App\Models;
+
+```php
+<?php
+
+namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -66,9 +99,11 @@ class Users extends Model {
 
 }
 ```
+
 ## Table posts
 ### SQL
-```
+
+```sql
 CREATE TABLE `posts` (
 	`id` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
 	`title` VARCHAR(64) UNSIGNED NOT NULL DEFAULT '',
@@ -80,9 +115,13 @@ CREATE TABLE `posts` (
 COLLATE='utf8_general_ci'
 ENGINE=InnoDB;
 ```
+
 ### Generated Models/Posts.php class
-```
-<?php namespace App\Models;
+
+```php
+<?php
+
+namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
