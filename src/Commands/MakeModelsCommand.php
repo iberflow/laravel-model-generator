@@ -185,7 +185,7 @@ class MakeModelsCommand extends GeneratorCommand
 
         $class = VariableConversion::convertTableNameToClassName($table);
 
-        $name = Pluralizer::singular($this->parseName($prefix . $class));
+        $name = $this->parseName($prefix . $class);
 
         if ($this->files->exists($path = $this->getPath($name))
             && !$this->option('force')) {
