@@ -207,7 +207,7 @@ class MakeModelsCommand extends GeneratorCommand
 
         $class = str_replace('{{table}}', 'protected $table = \'' . $table . '\';', $class);
         
-        $class = str_replace('{{primaryKey}}', $properties['primaryKey'] ? ('protected $primaryKey = \'' . $properties['primaryKey'] . '\';' . "\r\n\r\n\t") : '', $class);
+        $class = str_replace('{{primaryKey}}', $properties['primaryKey'] ? ('protected $primaryKey = \'' . $properties['primaryKey'] . '\';' . "\r\n\r\n\    ") : '', $class);
         
         $class = str_replace('{{extends}}', $extends, $class);
         $class = str_replace('{{shortNameExtends}}', explode('\\', $extends)[count(explode('\\', $extends))-1], $class);
