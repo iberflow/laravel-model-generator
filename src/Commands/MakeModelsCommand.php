@@ -84,6 +84,11 @@ class MakeModelsCommand extends GeneratorCommand
     protected $databaseEngine = 'mysql';
 
     /**
+     * @var \Illuminate\Database\Connection
+     */
+    protected $connection;
+
+    /**
      * Execute the console command.
      *
      * @return mixed
@@ -101,8 +106,13 @@ class MakeModelsCommand extends GeneratorCommand
         // create rule processor
 
         $this->ruleProcessor = new RuleProcessor();
-        $this->databaseEngine = config('database.default', 'mysql');
-        \DB::connection()->setFetchMode(\PDO::FETCH_CLASS);
+
+        //Select a database connection
+        $dbConfig = array_keys(config('database.connections'));
+        $dbSelect = $this->choice('Please select database connection, default:',$dbConfig,array_search(config('database.default'),$dbConfig));
+        $this->connection = \DB::connection($dbSelect);
+        $this->databaseEngine = $this->connection->getDriverName();
+        $this->connection->setFetchMode(\PDO::FETCH_CLASS);
 
         $tables = $this->getSchemaTables();
 
@@ -128,16 +138,16 @@ class MakeModelsCommand extends GeneratorCommand
         
         switch ($this->databaseEngine) {
            case 'mysql':
-               $tables = \DB::select("SELECT table_name AS name FROM information_schema.tables WHERE table_type='BASE TABLE' AND table_schema = '" . env('DB_DATABASE') . "'" . $filterTablesWhere);
+               $tables = $this->connection->select("SELECT table_name AS name FROM information_schema.tables WHERE table_type='BASE TABLE' AND table_schema = '" . $this->connection->getDatabaseName() . "'" . $filterTablesWhere);
                break;
 
            case 'sqlsrv':
            case 'dblib':
-               $tables = \DB::select("SELECT table_name AS name FROM information_schema.tables WHERE table_type='BASE TABLE' AND table_catalog = '" . env('DB_DATABASE') . "'" . $filterTablesWhere);
+               $tables = $this->connection->select("SELECT table_name AS name FROM information_schema.tables WHERE table_type='BASE TABLE' AND table_catalog = '" . $this->connection->getDatabaseName() . "'" . $filterTablesWhere);
                break;
            
            case 'pgsql':            
-               $tables = \DB::select("SELECT table_name AS name FROM information_schema.tables WHERE table_schema = 'public' AND table_type='BASE TABLE' AND table_catalog = '" . env('DB_DATABASE') . "'" . $filterTablesWhere);   
+               $tables = $this->connection->select("SELECT table_name AS name FROM information_schema.tables WHERE table_schema = 'public' AND table_type='BASE TABLE' AND table_catalog = '" . $this->connection->getDatabaseName() . "'" . $filterTablesWhere);
                break;
         }
         
@@ -153,7 +163,7 @@ class MakeModelsCommand extends GeneratorCommand
     protected function generateTable($table)
     {
         //prefix is the sub-directory within app
-        $prefix = $this->option('dir');
+        $prefix = $this->option('dir').VariableConversion::convertTableNameToClassName($this->connection->getDatabaseName()).'/';
 
         $ignoreTable = $this->option("ignore");
 
@@ -175,7 +185,7 @@ class MakeModelsCommand extends GeneratorCommand
 
         $class = VariableConversion::convertTableNameToClassName($table);
 
-        $name = Pluralizer::singular($this->parseName($prefix . $class));
+        $name = $this->parseName($prefix . $class);
 
         if ($this->files->exists($path = $this->getPath($name))
             && !$this->option('force')) {
@@ -204,6 +214,8 @@ class MakeModelsCommand extends GeneratorCommand
         $properties = $this->getTableProperties($table);
 
         $extends = $this->option('extends');
+
+        $class = str_replace('{{connection}}', 'protected $connection = \'' . $this->connection->getConfig('name') . '\';', $class);
 
         $class = str_replace('{{table}}', 'protected $table = \'' . $table . '\';', $class);
         

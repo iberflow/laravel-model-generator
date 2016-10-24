@@ -9,6 +9,8 @@ use {{extends}};
  */
 class DummyClass extends {{shortNameExtends}}
 {
+    {{connection}}
+
     {{table}}
 
     {{primaryKey}}{{timestamps}}
