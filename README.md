@@ -32,6 +32,7 @@ Usage:
 
 Options:
       --tables[=TABLES]          Comma separated table names to generate
+      --prefix[=PREFIX]          Table Prefix [default: DB::getTablePrefix()]
       --dir[=DIR]                Model directory [default: "Models/"]
       --extends[=EXTENDS]        Parent class [default: "Illuminate\Database\Eloquent\Model"]
       --fillable[=FILLABLE]      Rules for $fillable array columns [default: ""]
