@@ -102,7 +102,10 @@ class MakeModelsCommand extends GeneratorCommand
 
         $this->ruleProcessor = new RuleProcessor();
         $this->databaseEngine = config('database.default', 'mysql');
-        \DB::connection()->setFetchMode(\PDO::FETCH_CLASS);
+        $dispatcher = new \Illuminate\Events\Dispatcher;
+        $dispatcher->listen(\Illuminate\Database\Events\StatementPrepared::class, function ($event) {
+            $event->statement->setFetchMode(PDO::FETCH_CLASS);
+        });
 
         $tables = $this->getSchemaTables();
 
@@ -175,7 +178,7 @@ class MakeModelsCommand extends GeneratorCommand
 
         $class = VariableConversion::convertTableNameToClassName($table);
 
-        $name = Pluralizer::singular($this->parseName($prefix . $class));
+        $name = Pluralizer::singular($this->qualifyClass($prefix . $class));
 
         if ($this->files->exists($path = $this->getPath($name))
             && !$this->option('force')) {
