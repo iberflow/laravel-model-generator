@@ -187,10 +187,9 @@ class MakeModelsCommand extends GeneratorCommand
 
         // replace table prefix
         $tablePrefix = $this->option('prefix') ?: \DB::getTablePrefix();
-        $table = str_replace($tablePrefix,'',$table);
+        $prefixRemovedTableName = str_replace($tablePrefix,'',$table);
 
-
-        $class = VariableConversion::convertTableNameToClassName($table);
+        $class = VariableConversion::convertTableNameToClassName($prefixRemovedTableName);
 
         $name = Pluralizer::singular($this->qualifyClass($prefix . $class));
 
