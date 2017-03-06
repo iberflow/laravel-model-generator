@@ -185,6 +185,11 @@ class MakeModelsCommand extends GeneratorCommand
             return;
         }
 
+        // replace table prefix
+        $tablePrefix = $this->option('prefix') ?: \DB::getTablePrefix();
+        $table = str_replace($tablePrefix,'',$table);
+
+
         $class = VariableConversion::convertTableNameToClassName($table);
 
         $name = Pluralizer::singular($this->qualifyClass($prefix . $class));
@@ -409,6 +414,7 @@ class MakeModelsCommand extends GeneratorCommand
     {
         return [
             ['tables', null, InputOption::VALUE_OPTIONAL, 'Comma separated table names to generate', null],
+            ['prefix',null, InputOption::VALUE_OPTIONAL, 'Table prefix',null],
             ['dir', null, InputOption::VALUE_OPTIONAL, 'Model directory', $this->namespace],
             ['extends', null, InputOption::VALUE_OPTIONAL, 'Parent class', $this->extends],
             ['fillable', null, InputOption::VALUE_OPTIONAL, 'Rules for $fillable array columns', $this->fillableRules],
