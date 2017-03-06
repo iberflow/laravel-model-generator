@@ -2,6 +2,8 @@
 
 namespace Iber\Generator\Commands;
 
+use Illuminate\Database\Connection;
+use Illuminate\Database\Events\StatementPrepared;
 use Illuminate\Support\Pluralizer;
 use Illuminate\Console\GeneratorCommand;
 use Iber\Generator\Utilities\RuleProcessor;
@@ -102,7 +104,16 @@ class MakeModelsCommand extends GeneratorCommand
 
         $this->ruleProcessor = new RuleProcessor();
         $this->databaseEngine = config('database.default', 'mysql');
-        \DB::connection()->setFetchMode(\PDO::FETCH_CLASS);
+
+        \Event::listen(StatementPrepared::class, function ($event) {
+            /** @var \PDOStatement $statement */
+            $statement = $event->statement;
+            /** @var Connection $connection */
+            $connection = $event->connection;
+
+            $pdo = $connection->getPdo();
+            $statement->setFetchMode($pdo::FETCH_CLASS, \stdClass::class);
+        });
 
         $tables = $this->getSchemaTables();
 
@@ -121,26 +132,26 @@ class MakeModelsCommand extends GeneratorCommand
         $filterTablesWhere = '';
         if ($this->option("tables")) {
             $tableNamesToFilter = explode(',', $this->option('tables'));
-            if(is_array($tableNamesToFilter) && count($tableNamesToFilter) > 0) {
+            if (is_array($tableNamesToFilter) && count($tableNamesToFilter) > 0) {
                 $filterTablesWhere = ' AND table_name IN (\'' . implode('\', \'', $tableNamesToFilter) . '\')';
             }
         }
-        
-        switch ($this->databaseEngine) {
-           case 'mysql':
-               $tables = \DB::select("SELECT table_name AS name FROM information_schema.tables WHERE table_type='BASE TABLE' AND table_schema = '" . env('DB_DATABASE') . "'" . $filterTablesWhere);
-               break;
 
-           case 'sqlsrv':
-           case 'dblib':
-               $tables = \DB::select("SELECT table_name AS name FROM information_schema.tables WHERE table_type='BASE TABLE' AND table_catalog = '" . env('DB_DATABASE') . "'" . $filterTablesWhere);
-               break;
-           
-           case 'pgsql':            
-               $tables = \DB::select("SELECT table_name AS name FROM information_schema.tables WHERE table_schema = 'public' AND table_type='BASE TABLE' AND table_catalog = '" . env('DB_DATABASE') . "'" . $filterTablesWhere);   
-               break;
+        switch ($this->databaseEngine) {
+            case 'mysql':
+                $tables = \DB::select("SELECT table_name AS name FROM information_schema.tables WHERE table_type='BASE TABLE' AND table_schema = '" . env('DB_DATABASE') . "'" . $filterTablesWhere);
+                break;
+
+            case 'sqlsrv':
+            case 'dblib':
+                $tables = \DB::select("SELECT table_name AS name FROM information_schema.tables WHERE table_type='BASE TABLE' AND table_catalog = '" . env('DB_DATABASE') . "'" . $filterTablesWhere);
+                break;
+
+            case 'pgsql':
+                $tables = \DB::select("SELECT table_name AS name FROM information_schema.tables WHERE table_schema = 'public' AND table_type='BASE TABLE' AND table_catalog = '" . env('DB_DATABASE') . "'" . $filterTablesWhere);
+                break;
         }
-        
+
         return $tables;
     }
 
@@ -170,15 +181,15 @@ class MakeModelsCommand extends GeneratorCommand
         // if we have ignore tables, we need to find all the posibilites
         if (is_string($ignoreTable) && preg_match("/^" . $table . "|^" . $table . ",|," . $table . ",|," . $table . "$/", $ignoreTable)) {
             $this->info($table . " is ignored");
+
             return;
         }
 
         $class = VariableConversion::convertTableNameToClassName($table);
 
-        $name = Pluralizer::singular($this->parseName($prefix . $class));
+        $name = Pluralizer::singular($this->qualifyClass($prefix . $class));
 
-        if ($this->files->exists($path = $this->getPath($name))
-            && !$this->option('force')) {
+        if ($this->files->exists($path = $this->getPath($name)) && !$this->option('force')) {
             return $this->error($this->extends . ' for ' . $table . ' already exists!');
         }
 
@@ -206,11 +217,11 @@ class MakeModelsCommand extends GeneratorCommand
         $extends = $this->option('extends');
 
         $class = str_replace('{{table}}', 'protected $table = \'' . $table . '\';', $class);
-        
-        $class = str_replace('{{primaryKey}}', $properties['primaryKey'] ? ('protected $primaryKey = \'' . $properties['primaryKey'] . '\';' . "\r\n\r\n\    ") : '', $class);
-        
+
+        $class = str_replace('{{primaryKey}}', $properties['primaryKey'] ? ('protected $primaryKey = \'' . $properties['primaryKey'] . '\';' . "\r\n\r\n\t") : '', $class);
+
         $class = str_replace('{{extends}}', $extends, $class);
-        $class = str_replace('{{shortNameExtends}}', explode('\\', $extends)[count(explode('\\', $extends))-1], $class);
+        $class = str_replace('{{shortNameExtends}}', explode('\\', $extends)[count(explode('\\', $extends)) - 1], $class);
         $class = str_replace('{{fillable}}', 'protected $fillable = ' . VariableConversion::convertArrayToString($properties['fillable']) . ';', $class);
         $class = str_replace('{{guarded}}', 'protected $guarded = ' . VariableConversion::convertArrayToString($properties['guarded']) . ';', $class);
         $class = str_replace('{{timestamps}}', 'public $timestamps = ' . VariableConversion::convertBooleanToString($properties['timestamps']) . ';', $class);
@@ -228,7 +239,7 @@ class MakeModelsCommand extends GeneratorCommand
      * Replaces setters and getters from the stub. The functions are created
      * from provider properties.
      *
-     * @param  array $properties
+     * @param  array  $properties
      * @param  string $class
      * @return string
      */
@@ -263,7 +274,7 @@ class MakeModelsCommand extends GeneratorCommand
     protected function getTableProperties($table)
     {
         $primaryKey = $this->getTablePrimaryKey($table);
-        $primaryKey = $primaryKey != 'id' ? $primaryKey : null; 
+        $primaryKey = $primaryKey != 'id' ? $primaryKey : null;
 
         $fillable = [];
         $guarded = [];
@@ -275,7 +286,7 @@ class MakeModelsCommand extends GeneratorCommand
 
             //priotitze guarded properties and move to fillable
             if ($this->ruleProcessor->check($this->option('fillable'), $column->name)) {
-                if (!in_array($column->name, array_merge(['id', 'created_at', 'updated_at', 'deleted_at'], $primaryKey ? [ $primaryKey ] : []))) {
+                if (!in_array($column->name, array_merge(['id', 'created_at', 'updated_at', 'deleted_at'], $primaryKey ? [$primaryKey] : []))) {
                     $fillable[] = $column->name;
                 }
             }
@@ -300,22 +311,22 @@ class MakeModelsCommand extends GeneratorCommand
      */
     protected function getTableColumns($table)
     {
-       switch ($this->databaseEngine) {
-          
-          case 'mysql':
-            $columns = \DB::select("SELECT COLUMN_NAME as `name` FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = '" . env("DB_DATABASE") . "' AND TABLE_NAME = '{$table}'");
-            break;
+        switch ($this->databaseEngine) {
 
-          case 'sqlsrv':
-          case 'dblib':
-            $columns = \DB::select("SELECT COLUMN_NAME as 'name' FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_CATALOG = '" . env("DB_DATABASE") . "' AND TABLE_NAME = '{$table}'");
-            break;
-            
-          case 'pgsql':
-            $columns = \DB::select("SELECT COLUMN_NAME as name FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_CATALOG = '" . env("DB_DATABASE") . "' AND TABLE_NAME = '{$table}'");
-            break;          
-       }
-        
+            case 'mysql':
+                $columns = \DB::select("SELECT COLUMN_NAME as `name` FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = '" . env("DB_DATABASE") . "' AND TABLE_NAME = '{$table}'");
+                break;
+
+            case 'sqlsrv':
+            case 'dblib':
+                $columns = \DB::select("SELECT COLUMN_NAME as 'name' FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_CATALOG = '" . env("DB_DATABASE") . "' AND TABLE_NAME = '{$table}'");
+                break;
+
+            case 'pgsql':
+                $columns = \DB::select("SELECT COLUMN_NAME as name FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_CATALOG = '" . env("DB_DATABASE") . "' AND TABLE_NAME = '{$table}'");
+                break;
+        }
+
         return $columns;
     }
 
@@ -328,43 +339,41 @@ class MakeModelsCommand extends GeneratorCommand
      */
     protected function getTablePrimaryKey($table)
     {
-       
-       switch ($this->databaseEngine) {
-          case 'mysql':
-             $primaryKeyResult = \DB::select(
-                  "SELECT COLUMN_NAME
+
+        switch ($this->databaseEngine) {
+            case 'mysql':
+                $primaryKeyResult = \DB::select(
+                    "SELECT COLUMN_NAME
                   FROM information_schema.COLUMNS 
                   WHERE  TABLE_SCHEMA = '" . env("DB_DATABASE") . "' AND 
                          TABLE_NAME = '{$table}' AND 
-                         COLUMN_KEY = 'PRI'");          
-             break;
+                         COLUMN_KEY = 'PRI'");
+                break;
 
-          case 'sqlsrv':
-          case 'dblib':
-
-             $primaryKeyResult = \DB::select(
-                  "SELECT ku.COLUMN_NAME
+            case 'sqlsrv':
+            case 'dblib':
+                $primaryKeyResult = \DB::select(
+                    "SELECT ku.COLUMN_NAME
                    FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS AS tc
                    INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE AS ku
                    ON tc.CONSTRAINT_TYPE = 'PRIMARY KEY' 
                    AND tc.CONSTRAINT_NAME = ku.CONSTRAINT_NAME
                    WHERE ku.TABLE_CATALOG ='" . env("DB_DATABASE") . "' AND ku.TABLE_NAME='{$table}';");
-            break;
+                break;
 
-          case 'pgsql':
-          
-             $primaryKeyResult = \DB::select(
-                  "SELECT ku.COLUMN_NAME AS \"COLUMN_NAME\"
+            case 'pgsql':
+                $primaryKeyResult = \DB::select(
+                    "SELECT ku.COLUMN_NAME AS \"COLUMN_NAME\"
                    FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS AS tc
                    INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE AS ku
                    ON tc.CONSTRAINT_TYPE = 'PRIMARY KEY' 
                    AND tc.CONSTRAINT_NAME = ku.CONSTRAINT_NAME
                    WHERE ku.TABLE_CATALOG ='" . env("DB_DATABASE") . "' AND ku.TABLE_NAME='{$table}';");
-             break;
-          
-       }
+                break;
 
-        if (count($primaryKeyResult) == 1){
+        }
+
+        if (count($primaryKeyResult) == 1) {
             return $primaryKeyResult[0]->COLUMN_NAME;
         }
 
