@@ -187,11 +187,15 @@ class MakeModelsCommand extends GeneratorCommand
 
         // replace table prefix
         $tablePrefix = $this->option('prefix') ?: \DB::getTablePrefix();
-        $prefixRemovedTableName = str_replace($tablePrefix,'',$table);
+        $prefixRemovedTableName = str_replace($tablePrefix, '', $table);
 
         $class = VariableConversion::convertTableNameToClassName($prefixRemovedTableName);
-
-        $name = Pluralizer::singular($this->qualifyClass($prefix . $class));
+        
+        if (method_exists($this, 'qualifyClass')) {
+            $name = Pluralizer::singular($this->qualifyClass($prefix . $class));
+        } else {
+            $name = Pluralizer::singular($this->parseName($prefix . $class));
+        }
 
         if ($this->files->exists($path = $this->getPath($name)) && !$this->option('force')) {
             return $this->error($this->extends . ' for ' . $table . ' already exists!');
@@ -413,7 +417,7 @@ class MakeModelsCommand extends GeneratorCommand
     {
         return [
             ['tables', null, InputOption::VALUE_OPTIONAL, 'Comma separated table names to generate', null],
-            ['prefix',null, InputOption::VALUE_OPTIONAL, 'Table prefix',null],
+            ['prefix', null, InputOption::VALUE_OPTIONAL, 'Table prefix', null],
             ['dir', null, InputOption::VALUE_OPTIONAL, 'Model directory', $this->namespace],
             ['extends', null, InputOption::VALUE_OPTIONAL, 'Parent class', $this->extends],
             ['fillable', null, InputOption::VALUE_OPTIONAL, 'Rules for $fillable array columns', $this->fillableRules],
