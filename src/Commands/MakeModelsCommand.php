@@ -112,7 +112,7 @@ class MakeModelsCommand extends GeneratorCommand
             $connection = $event->connection;
 
             $pdo = $connection->getPdo();
-            $statement->setFetchMode($pdo::FETCH_OBJ);
+            $statement->setFetchMode($pdo::FETCH_CLASS, \stdClass::class);
         });
 
         $tables = $this->getSchemaTables();
