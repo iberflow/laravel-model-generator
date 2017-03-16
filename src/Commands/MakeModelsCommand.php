@@ -118,7 +118,7 @@ class MakeModelsCommand extends GeneratorCommand
         $tables = $this->getSchemaTables();
 
         foreach ($tables as $table) {
-            $this->generateTable($table->name);
+            $this->generateTable( ((object) $table)->name );
         }
     }
 
@@ -291,6 +291,7 @@ class MakeModelsCommand extends GeneratorCommand
         $columns = $this->getTableColumns($table);
 
         foreach ($columns as $column) {
+            $column = (object) $column;
 
             //priotitze guarded properties and move to fillable
             if ($this->ruleProcessor->check($this->option('fillable'), $column->name)) {
@@ -382,7 +383,7 @@ class MakeModelsCommand extends GeneratorCommand
         }
 
         if (count($primaryKeyResult) == 1) {
-            return $primaryKeyResult[0]->COLUMN_NAME;
+            return ((object) $primaryKeyResult[0])->COLUMN_NAME;
         }
 
         return null;
