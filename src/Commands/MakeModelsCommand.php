@@ -118,7 +118,8 @@ class MakeModelsCommand extends GeneratorCommand
         $tables = $this->getSchemaTables();
 
         foreach ($tables as $table) {
-            $this->generateTable( ((object) $table)->name );
+            $table = (object) $table;
+            $this->generateTable($table->name);
         }
     }
 
@@ -383,7 +384,8 @@ class MakeModelsCommand extends GeneratorCommand
         }
 
         if (count($primaryKeyResult) == 1) {
-            return ((object) $primaryKeyResult[0])->COLUMN_NAME;
+            $column = (object) $primaryKeyResult[0];
+            return $column->COLUMN_NAME;
         }
 
         return null;
