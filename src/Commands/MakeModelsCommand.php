@@ -119,7 +119,7 @@ class MakeModelsCommand extends GeneratorCommand
 
         foreach ($tables as $table) {
             $table = (object) $table;
-            $this->generateTable( ->name );
+            $this->generateTable( $table->name );
         }
     }
 
