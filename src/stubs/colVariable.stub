@@ -1,0 +1,6 @@
+
+    /**
+     * Data Type: {{datatype}}
+     * @var {{returndt}}mixed
+     */
+    public {{colname}};

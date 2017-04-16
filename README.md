@@ -45,6 +45,7 @@ Options:
   -m, --getset                   Defines if you want to generate set and get methods
   -h, --help                     Display this help message
   -q, --quiet                    Do not output any message
+  -c, --variables                Set columns as variables set [TRUE] to set as variables and [FALSE] for comments.
   -V, --version                  Display this application version
       --ansi                     Force ANSI output
       --no-ansi                  Disable ANSI output
