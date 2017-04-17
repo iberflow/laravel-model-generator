@@ -44,6 +44,7 @@ Options:
                                               Just type --ignoresystem or -s
   -m, --getset                   Defines if you want to generate set and get methods
   -h, --help                     Display this help message
+  -d, --connection               Database connection name
   -q, --quiet                    Do not output any message
   -c, --variables                Set columns as variables set [TRUE] to set as variables and [FALSE] for comments.
   -V, --version                  Display this application version

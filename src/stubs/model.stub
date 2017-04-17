@@ -12,6 +12,8 @@ class DummyClass extends {{shortNameExtends}}
 {
     {{colvariable}}
 
+    {{connection}}
+
     {{table}}
 
     {{primaryKey}}{{timestamps}}
