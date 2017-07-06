@@ -1,7 +1,7 @@
 # Project abandoned
 I'm very sorry to announce that I no longer have time to maintain this package. This project was originally created over a couple of days when I needed to migrate an existing project onto Laravel. Even though it's being actively used (over 50k installs!), I can't find the time to keep track of the PRs and what changes might break things in new/old Laravel versions, nor have I had the need to use it after the initial release. The codebase is a mess and it desperately cries for a rewrite.
 
-Please use [reliese/laravel](https://github.com/reliese/laravel) package instead.
+**Please use [reliese/laravel](https://github.com/reliese/laravel) package instead.**
 
 ------
 
