@@ -6,9 +6,14 @@ use {{extends}};
 
 /**
  * Class DummyClass
+ {{colcommented}}
  */
 class DummyClass extends {{shortNameExtends}}
 {
+    {{colvariable}}
+
+    {{connection}}
+
     {{table}}
 
     {{primaryKey}}{{timestamps}}
