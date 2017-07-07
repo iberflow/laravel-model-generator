@@ -103,7 +103,8 @@ class MakeModelsCommand extends GeneratorCommand
         // create rule processor
 
         $this->ruleProcessor = new RuleProcessor();
-        $this->databaseEngine = config('database.default', 'mysql');
+        //Get the database engine driver name
+        $this->databaseEngine = config('database.connections')[$this->databaseEngine]['driver'];
 
         \Event::listen(StatementPrepared::class, function ($event) {
             /** @var \PDOStatement $statement */
