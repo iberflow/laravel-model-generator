@@ -224,10 +224,14 @@ class MakeModelsCommand extends GeneratorCommand
         $properties = $this->getTableProperties($table);
 
         $extends = $this->option('extends');
+        
+        // replace table prefix
+        $tablePrefix = $this->option('prefix') ?: \DB::getTablePrefix();
+        $table = str_replace($tablePrefix, '', $table);
 
         $class = str_replace('{{table}}', 'protected $table = \'' . $table . '\';', $class);
 
-        $class = str_replace('{{primaryKey}}', $properties['primaryKey'] ? ('protected $primaryKey = \'' . $properties['primaryKey'] . '\';' . "\r\n\r\n\t") : '', $class);
+        $class = str_replace('{{primaryKey}}', $properties['primaryKey'] ? ('protected $primaryKey = \'' . $properties['primaryKey'] . '\';' . "\r\n\r\n    ") : '', $class);
 
         $class = str_replace('{{extends}}', $extends, $class);
         $class = str_replace('{{shortNameExtends}}', explode('\\', $extends)[count(explode('\\', $extends)) - 1], $class);
